@@ -1,0 +1,8 @@
+client.dll + 0x4A51FFC -> playerbase base pointer -> player structure
+client.dll + 0x4A5200C -> playerbase base pointer -> player structure
+
+--- OFFSETS ---
+
+Health: 	player structure + 0x70
+Armor: 		player structure + 0x74 = armor
+
