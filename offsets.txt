@@ -1,8 +1,10 @@
-client.dll + 0x4A51FFC -> playerbase base pointer -> player structure
-client.dll + 0x4A5200C -> playerbase base pointer -> player structure
+position X: client.dll + A90C94
+position Y: client.dll + A90C98
+position Z: 
 
---- OFFSETS ---
 
-Health: 	player structure + 0x70
-Armor: 		player structure + 0x74 = armor
+
+client.dll + 0x04A51FFC -> + 0x20 = radar base pointer -> radar
+
+
 
