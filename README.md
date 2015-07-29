@@ -1,2 +1,2 @@
-# Aimbot for csgo
+# Triggerbot for csgo
 
