@@ -37,10 +37,10 @@ void MemoryManager::init()
 		else
 		{
 			//Find a handle on the module we want from the process.
-			moduleAdress_ = findModuleHandle();
-			if (moduleAdress_ == 0)
+			clientModuleAdress_ = findModuleHandle(CLIENT_MODULE_NAME);
+			if (clientModuleAdress_ == 0)
 			{
-				MessageBox(0, "Could not find module adress!", "Error!", MB_OK | MB_ICONERROR);
+				MessageBox(0, "Could not find client module adress!", "Error!", MB_OK | MB_ICONERROR);
 			}
 			else
 			{
@@ -49,6 +49,12 @@ void MemoryManager::init()
 				{
 					MessageBox(0, "Could not find radar base adress!", "Error!", MB_OK | MB_ICONERROR);
 				}
+				//Find the crosshair adress
+				if (!findCrosshairAdress())
+				{
+					MessageBox(0, "Could not find crosshair adress!", "Error!", MB_OK | MB_ICONERROR);
+				}
+
 			}
 		}
 	}
@@ -61,7 +67,7 @@ void MemoryManager::close()
 
 
 
-bool MemoryManager::findNameInPath(TCHAR* path, int nLetters)
+bool MemoryManager::findNameInPath(string name, TCHAR* path, int nLetters)
 {
 	bool letterFound = false;
 	int i = 0;
@@ -75,13 +81,13 @@ bool MemoryManager::findNameInPath(TCHAR* path, int nLetters)
 			j++;
 			letterFound = true;
 			//check if this is the name we are looking for.
-			for (int k = 0; k < MODULE_NAME.size() && letterFound == true; k++)
+			for (int k = 0; k < name.size() && letterFound == true; k++)
 			{
 				//If this is the right letter.
-				if (path[j + k] == MODULE_NAME[k])
+				if (path[j + k] == name[k])
 				{
-					//If every letter of the name is right.
-					if (k == MODULE_NAME.size() - 1)
+					//If the letter is the same as the last letter
+					if (path[j+k] == name[name.size() - 1])
 					{
 						//The name is found.
 						return true;
@@ -100,7 +106,7 @@ bool MemoryManager::findNameInPath(TCHAR* path, int nLetters)
 
 
 
-HMODULE MemoryManager::findModuleHandle()
+HMODULE MemoryManager::findModuleHandle(string name)
 {
 	HMODULE modules[1024];
 	DWORD nBytes;
@@ -121,7 +127,7 @@ HMODULE MemoryManager::findModuleHandle()
 			// Get the full path to the module's file.
 			if (GetModuleFileNameEx(process_, modules[i], path, nLetters))
 			{
-				if (findNameInPath(path, nLetters))
+				if (findNameInPath(name, path, nLetters))
 				{
 					return modules[i];
 				}
@@ -135,7 +141,7 @@ HMODULE MemoryManager::findModuleHandle()
 
 bool MemoryManager::findRadarBaseAdress()
 {
-	int staticPointerAdress = (int)moduleAdress_ + STATIC_POINTER_OFFSET;
+	int staticPointerAdress = (int)clientModuleAdress_ + RADAR_STATIC_POINTER_OFFSET;
 	int dynamicPointerAdress;
 	//Read the adress of the dynamic pointer.
 	if (!ReadProcessMemory(process_, (LPCVOID)(staticPointerAdress), &dynamicPointerAdress, sizeof(dynamicPointerAdress), NULL))
@@ -146,7 +152,7 @@ bool MemoryManager::findRadarBaseAdress()
 	else
 	{
 		//Add the offset to get the base adress of the radar structure.
-		dynamicPointerAdress += DYNAMIC_POINTER_OFFSET;
+		dynamicPointerAdress += RADAR_DYNAMIC_POINTER_OFFSET;
 		//Read the base adress of the radar structure.
 		if (!ReadProcessMemory(process_, (LPCVOID)(dynamicPointerAdress), &radarBaseAdress_, sizeof(radarBaseAdress_), NULL))
 		{ 
@@ -160,20 +166,56 @@ bool MemoryManager::findRadarBaseAdress()
 	}
 }
 
+bool MemoryManager::findCrosshairAdress()
+{
+	int staticPointerAdress = (int)clientModuleAdress_ + CROSSHAIR_STATIC_POINTER_OFFSET;
+	int dynamicPointerAdress;
+	if (!ReadProcessMemory(process_, (LPCVOID)(staticPointerAdress), &dynamicPointerAdress, sizeof(dynamicPointerAdress), NULL))
+	{
+		MessageBox(0, "Could not read at static pointer adress!", "Error!", MB_OK | MB_ICONERROR);
+		return false;
+	}
+	else
+	{
+		//Add the offset to get the base adress of the structure.
+		dynamicPointerAdress += CROSSHAIR_DYNAMIC_POINTER_OFFSET;
+		//Read the base adress of the structure.
+		if (!ReadProcessMemory(process_, (LPCVOID)(dynamicPointerAdress), &crosshairAdress_, sizeof(crosshairAdress_), NULL))
+		{
+			MessageBox(0, "Could not read at dynamic pointer adress!", "Error!", MB_OK | MB_ICONERROR);
+			return false;
+		}
+		else
+		{
+			//Add the offset to get the crosshair adress
+			crosshairAdress_ += CROSSHAIR_STRUCTURE_OFFSET;
+			return true;
+		}
+	}
+}
 
 int MemoryManager::countPlayers()
 {
-
 	int count = 0;
-	
+	//For every player in the game
 	while (readPlayerID(count) != 0)
 	{
+		//If the player is an enemy
 		count++;
 	}
 	return count;
 
 }
 
+int MemoryManager::readCrosshairTargetID()
+{
+	int crosshairTargetID = 0;
+	if (!ReadProcessMemory(process_, (LPCVOID)(crosshairAdress_), &crosshairTargetID, sizeof(crosshairTargetID), NULL))
+	{
+		MessageBox(0, "Could not read at crosshair adress!", "Error!", MB_OK | MB_ICONERROR);
+	}
+	return crosshairTargetID;
+}
 
 float MemoryManager::readPlayerPosX(int player)
 {
@@ -229,6 +271,7 @@ float MemoryManager::readPlayerAngleV(int player)
 
 float MemoryManager::readPlayerAngleH(int player)
 {
+	//Get the adress where to read
 	int playerAngleHAdress = radarBaseAdress_ + player * SIZE_OF_RADAR_STRUCTURE + ANGLE_H_OFFSET;
 	float angleH;
 	if (!ReadProcessMemory(process_, (LPCVOID)(playerAngleHAdress), &angleH, sizeof(angleH), NULL))
@@ -280,7 +323,7 @@ char* MemoryManager::readPlayerName(int player)
 }
 
 
-//d = t, 11 = ct
+//t = 0xD, ct = 0x11
 int MemoryManager::readPlayerSide(int player)
 {
 	int  playerSideAdress = radarBaseAdress_ + player * SIZE_OF_RADAR_STRUCTURE + PLAYER_SIDE_OFFSET;

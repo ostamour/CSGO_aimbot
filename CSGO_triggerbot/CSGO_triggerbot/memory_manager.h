@@ -9,9 +9,16 @@ using namespace std;
 
 
 
-const string MODULE_NAME = "client.dll";
-const int STATIC_POINTER_OFFSET = 0x04A5202C;
-const int DYNAMIC_POINTER_OFFSET = 0x20;
+const string CLIENT_MODULE_NAME = "client.dll";
+
+const int RADAR_STATIC_POINTER_OFFSET = 0x04A5202C;
+const int RADAR_DYNAMIC_POINTER_OFFSET = 0x20;
+
+const int CROSSHAIR_STATIC_POINTER_OFFSET = 0x04B337F8;
+const int CROSSHAIR_DYNAMIC_POINTER_OFFSET = 0x68;
+const int CROSSHAIR_STRUCTURE_OFFSET = 0x860;
+
+
 const int POSITION_X_OFFSET = 0x1C0;
 const int POSITION_Y_OFFSET = 0x1C4;
 const int POSITION_Z_OFFSET = 0x1C8;
@@ -36,13 +43,16 @@ public:
 	void init();
 	void close();
 
-	bool findNameInPath(TCHAR* path, int nLetters);
-	HMODULE findModuleHandle();
+	bool findNameInPath(string name, TCHAR* path, int nLetters);
+	HMODULE findModuleHandle(string name);
 
 	bool findRadarBaseAdress();
+	bool findCrosshairAdress();
 
 	int countPlayers();
 	
+	int readCrosshairTargetID();
+
 	float readPlayerPosX(int player);
 	float readPlayerPosY(int player);
 	float readPlayerPosZ(int player);
@@ -56,12 +66,7 @@ public:
 
 
 	int readPlayerSide(int player);
-
 	char readPlayerShown(int player);
-
-	
-
-
 
 private:
 	HWND window_;
@@ -71,10 +76,12 @@ private:
 	DWORD processID_;
 
 	//Module info
-	HMODULE moduleAdress_;
+	HMODULE clientModuleAdress_;
+
 	
 	//Adresses to radar structure
 	int radarBaseAdress_;
+	int crosshairAdress_;
 };
 
 
