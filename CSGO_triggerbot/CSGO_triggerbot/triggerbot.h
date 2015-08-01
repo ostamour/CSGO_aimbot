@@ -1,16 +1,12 @@
-#ifndef GAME
-#define GAME
+#ifndef TRIGGERBOT
+#define TRIGGERBOT
 
-#include <vector>
 #include "memory_manager.h"
-#include <string>
-#include <cmath>
-
-#define PI 3.14159
-
-const int MAX_N_PLAYER = 24;
 
 using namespace std;
+
+
+const int MAX_N_PLAYER = 24;
 
 struct Player
 {
@@ -38,7 +34,6 @@ struct Player
 class TriggerBot
 {
 public:
-
 	TriggerBot();
 	TriggerBot(MemoryManager* memoryManager);
 	~TriggerBot();
@@ -52,23 +47,17 @@ public:
 	//If the crosshair is on an enemy
 	bool crosshairOnEnemy();
 	//Send click virtual input
-	void fire();
+	void trigger();
 	//Stop virtual input
-	void stopFire();
-	//Calculate the vertical angle the player 1 must have to be aiming at an enemy player.
-	float calculateVAngle();
-	//Calculate the horizontal angle the player 1 must have to be aiming at an enemy player
-	float calculateAngleH(float posX, float posY);
-
-	int findClosestEnemyPlayer();
+	void stop();
 	
 private:
+	MemoryManager* memoryManager_;
+	
 	int crosshairTargetID_;
 
 	Player* players_[MAX_N_PLAYER];
 	int nPlayers_;
-
-	MemoryManager* memoryManager_;
 
 	INPUT mouseDown_;
 	INPUT mouseUp_;

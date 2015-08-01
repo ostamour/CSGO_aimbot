@@ -23,12 +23,12 @@ int main()
 			triggerBot->updateData();
 			if (triggerBot->crosshairOnEnemy())
 			{
-				triggerBot->fire();
+				triggerBot->trigger();
 				while (triggerBot->crosshairOnEnemy())
 				{
 					triggerBot->updateData();
 				}
-				triggerBot->stopFire();
+				triggerBot->stop();
 			}
 		}
 	}

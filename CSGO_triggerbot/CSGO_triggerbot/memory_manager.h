@@ -51,9 +51,9 @@ public:
 
 	int countPlayers();
 	
-	int readCrosshairTargetID();
-
 	//Memory reading functions
+
+	int readCrosshairTargetID();
 
 	float readPlayerPosX(int player);
 	float readPlayerPosY(int player);

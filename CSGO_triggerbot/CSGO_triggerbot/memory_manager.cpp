@@ -318,7 +318,7 @@ char* MemoryManager::readPlayerName(int player)
 
 	if (!ReadProcessMemory(process_, (LPCVOID)(playerNameAdress), &playerName, 20, NULL))
 	{
-		coiut << "Could not read at player name adress!" << endl;
+		cout << "Could not read at player name adress!" << endl;
 	}
 	return playerName;
 }

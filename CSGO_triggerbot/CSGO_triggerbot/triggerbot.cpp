@@ -4,6 +4,7 @@ TriggerBot::TriggerBot()
 {
 	memoryManager_ = 0;
 	nPlayers_ = 0;
+	initInputs();
 }
 
 
@@ -11,6 +12,7 @@ TriggerBot::TriggerBot()
 TriggerBot::TriggerBot(MemoryManager* memoryManager)
 {
 	memoryManager_ = memoryManager;
+	nPlayers_ = 0;
 	initInputs();
 }
 
@@ -26,7 +28,6 @@ TriggerBot::~TriggerBot()
 		}
 		players_[i] = 0;
 	}
-	initInputs();
 }
 
 
@@ -104,7 +105,7 @@ bool TriggerBot::crosshairOnEnemy()
 
 
 
-void TriggerBot::fire()
+void TriggerBot::trigger()
 {
 	//Send left mouse button down input
 	SendInput(1, &mouseDown_, sizeof(mouseDown_));
@@ -112,22 +113,8 @@ void TriggerBot::fire()
 
 
 
-void TriggerBot::stopFire()
+void TriggerBot::stop()
 {
 	//Send left mouse button up input
 	SendInput(1, &mouseUp_, sizeof(mouseUp_));
-}
-
-
-
-float TriggerBot::calculateAngleH(float posX, float posY)
-{
-	float mPosX = players_[0]->posX;
-	float mPosY = players_[0]->posY;
-	float dPosX = posX - mPosX;
-	float dPosY = posY - mPosY;
-	
-	float angleH = atan(dPosY / dPosX) * 180 / PI;
-	
-	return angleH;
 }
