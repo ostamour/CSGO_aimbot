@@ -11,21 +11,25 @@ using namespace std;
 int main()
 {
 	MemoryManager* memoryManager = new MemoryManager();
-	memoryManager->init();
 	TriggerBot* triggerBot = new TriggerBot(memoryManager);
-	triggerBot->initInputs();
-
-	for (;;)
+	if (!memoryManager->init())
 	{
-		triggerBot->updateData();
-		if (triggerBot->crosshairOnEnemy())
+		cout << "Error cannot initialize memory manager." << endl;
+	}
+	else
+	{
+		for (;;)
 		{
-			triggerBot->fire();
-			while (triggerBot->crosshairOnEnemy())
+			triggerBot->updateData();
+			if (triggerBot->crosshairOnEnemy())
 			{
-				triggerBot->updateData();
+				triggerBot->fire();
+				while (triggerBot->crosshairOnEnemy())
+				{
+					triggerBot->updateData();
+				}
+				triggerBot->stopFire();
 			}
-			triggerBot->stopFire();
 		}
 	}
 	return 0;

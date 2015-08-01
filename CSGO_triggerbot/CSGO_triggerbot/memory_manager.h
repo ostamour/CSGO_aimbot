@@ -40,7 +40,7 @@ public:
 	MemoryManager();
 	~MemoryManager();
 
-	void init();
+	bool init();
 	void close();
 
 	bool findNameInPath(string name, TCHAR* path, int nLetters);
@@ -52,6 +52,8 @@ public:
 	int countPlayers();
 	
 	int readCrosshairTargetID();
+
+	//Memory reading functions
 
 	float readPlayerPosX(int player);
 	float readPlayerPosY(int player);
@@ -69,6 +71,7 @@ public:
 	char readPlayerShown(int player);
 
 private:
+	//Handle to window
 	HWND window_;
 	
 	//Process info

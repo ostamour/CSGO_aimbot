@@ -53,7 +53,6 @@ public:
 	bool crosshairOnEnemy();
 	//Send click virtual input
 	void fire();
-	void stopMoving();
 	//Stop virtual input
 	void stopFire();
 	//Calculate the vertical angle the player 1 must have to be aiming at an enemy player.

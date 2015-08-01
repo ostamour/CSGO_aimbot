@@ -11,18 +11,20 @@ MemoryManager::MemoryManager()
 
 MemoryManager::~MemoryManager()
 {
-	close();
+	CloseHandle(process_);
 }
 
 
 
-void MemoryManager::init()
+bool MemoryManager::init()
 {
+	bool success = true;
 	//Get a handle on the window of the game.
 	window_ = FindWindow(0, "Counter-Strike: Global Offensive");
 	if (window_ == 0)
 	{
-		MessageBox(0, "Error cannot find window.", "Error", MB_OK | MB_ICONERROR);
+		cout << "Error cannot find window." << endl;
+		success = false;
 	}
 	else
 	{
@@ -32,7 +34,8 @@ void MemoryManager::init()
 		process_ = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processID_);
 		if (!process_)
 		{
-			MessageBox(0, "Could not open the process!", "Error!", MB_OK | MB_ICONERROR);
+			cout << "Could not open the process!" << endl;
+			success = false;
 		}
 		else
 		{
@@ -40,29 +43,28 @@ void MemoryManager::init()
 			clientModuleAdress_ = findModuleHandle(CLIENT_MODULE_NAME);
 			if (clientModuleAdress_ == 0)
 			{
-				MessageBox(0, "Could not find client module adress!", "Error!", MB_OK | MB_ICONERROR);
+				cout << "Could not find client module adress!" << endl;
+				success = false;
 			}
 			else
 			{
 				//Find the radar base adress
 				if (!findRadarBaseAdress())
 				{
-					MessageBox(0, "Could not find radar base adress!", "Error!", MB_OK | MB_ICONERROR);
+					cout << "Could not find radar base adress!" << endl;
+					success = false;
 				}
 				//Find the crosshair adress
 				if (!findCrosshairAdress())
 				{
-					MessageBox(0, "Could not find crosshair adress!", "Error!", MB_OK | MB_ICONERROR);
+					cout << "Could not find crosshair adress!" << endl;
+					success = false;
 				}
 
 			}
 		}
 	}
-}
-
-void MemoryManager::close()
-{
-	CloseHandle(process_);
+	return success;
 }
 
 
@@ -113,7 +115,7 @@ HMODULE MemoryManager::findModuleHandle(string name)
 	// Get a list of all the modules in this process.
 	if (!EnumProcessModules(process_, modules, sizeof(modules), &nBytes))
 	{
-		MessageBox(0, "Could not access process modules!", "Error!", MB_OK | MB_ICONERROR);
+		cout << "Could not access process modules!" << endl;
 	}
 	else
 	{
@@ -146,7 +148,7 @@ bool MemoryManager::findRadarBaseAdress()
 	//Read the adress of the dynamic pointer.
 	if (!ReadProcessMemory(process_, (LPCVOID)(staticPointerAdress), &dynamicPointerAdress, sizeof(dynamicPointerAdress), NULL))
 	{
-		MessageBox(0, "Could not read at static pointer adress!", "Error!", MB_OK | MB_ICONERROR);
+		cout << "Could not read at static pointer adress!" << endl;
 		return false;
 	}
 	else
@@ -156,7 +158,7 @@ bool MemoryManager::findRadarBaseAdress()
 		//Read the base adress of the radar structure.
 		if (!ReadProcessMemory(process_, (LPCVOID)(dynamicPointerAdress), &radarBaseAdress_, sizeof(radarBaseAdress_), NULL))
 		{ 
-			MessageBox(0, "Could not read at dynamic pointer adress!", "Error!", MB_OK | MB_ICONERROR);
+			cout << "Could not read at dynamic pointer adress!" << endl;
 			return false;
 		}
 		else
@@ -172,7 +174,7 @@ bool MemoryManager::findCrosshairAdress()
 	int dynamicPointerAdress;
 	if (!ReadProcessMemory(process_, (LPCVOID)(staticPointerAdress), &dynamicPointerAdress, sizeof(dynamicPointerAdress), NULL))
 	{
-		MessageBox(0, "Could not read at static pointer adress!", "Error!", MB_OK | MB_ICONERROR);
+		cout << "Could not read at static pointer adress!" << endl;
 		return false;
 	}
 	else
@@ -182,7 +184,7 @@ bool MemoryManager::findCrosshairAdress()
 		//Read the base adress of the structure.
 		if (!ReadProcessMemory(process_, (LPCVOID)(dynamicPointerAdress), &crosshairAdress_, sizeof(crosshairAdress_), NULL))
 		{
-			MessageBox(0, "Could not read at dynamic pointer adress!", "Error!", MB_OK | MB_ICONERROR);
+			cout << "Could not read at dynamic pointer adress!" << endl;
 			return false;
 		}
 		else
@@ -212,7 +214,7 @@ int MemoryManager::readCrosshairTargetID()
 	int crosshairTargetID = 0;
 	if (!ReadProcessMemory(process_, (LPCVOID)(crosshairAdress_), &crosshairTargetID, sizeof(crosshairTargetID), NULL))
 	{
-		MessageBox(0, "Could not read at crosshair adress!", "Error!", MB_OK | MB_ICONERROR);
+		cout << "Could not read at crosshair adress!" << endl;
 	}
 	return crosshairTargetID;
 }
@@ -223,7 +225,7 @@ float MemoryManager::readPlayerPosX(int player)
 	float posX;
 	if (!ReadProcessMemory(process_, (LPCVOID)(playerPosXAdress), &posX, sizeof(posX), NULL))
 	{
-		MessageBox(0, "Could not read at position X adress!", "Error!", MB_OK | MB_ICONERROR);
+		cout << "Could not read at position X adress!" << endl;
 	}
 	return posX;
 }
@@ -236,7 +238,7 @@ float MemoryManager::readPlayerPosY(int player)
 	float posY;
 	if (!ReadProcessMemory(process_, (LPCVOID)(playerPosYAdress), &posY, sizeof(posY), NULL))
 	{
-		MessageBox(0, "Could not read at position Y adress!", "Error!", MB_OK | MB_ICONERROR);
+		cout << "Could not read at position Y adress!" << endl;
 	}
 	return posY;
 }
@@ -249,7 +251,7 @@ float MemoryManager::readPlayerPosZ(int player)
 	float posZ;
 	if (!ReadProcessMemory(process_, (LPCVOID)(playerPosZAdress), &posZ, sizeof(posZ), NULL))
 	{
-		MessageBox(0, "Could not read at position Z adress!", "Error!", MB_OK | MB_ICONERROR);
+		cout << "Could not read at position Z adress!" << endl;
 	}
 	return posZ;
 }
@@ -262,7 +264,7 @@ float MemoryManager::readPlayerAngleV(int player)
 	float angleV;
 	if (!ReadProcessMemory(process_, (LPCVOID)(playerAngleVAdress), &angleV, sizeof(angleV), NULL))
 	{
-		MessageBox(0, "Could not read at angle V adress!", "Error!", MB_OK | MB_ICONERROR);
+		cout << "Could not read at angle V adress!" << endl;
 	}
 	return angleV;
 }
@@ -271,12 +273,11 @@ float MemoryManager::readPlayerAngleV(int player)
 
 float MemoryManager::readPlayerAngleH(int player)
 {
-	//Get the adress where to read
 	int playerAngleHAdress = radarBaseAdress_ + player * SIZE_OF_RADAR_STRUCTURE + ANGLE_H_OFFSET;
 	float angleH;
 	if (!ReadProcessMemory(process_, (LPCVOID)(playerAngleHAdress), &angleH, sizeof(angleH), NULL))
 	{
-		MessageBox(0, "Could not read at angle H adress!", "Error!", MB_OK | MB_ICONERROR);
+		cout << "Could not read at angle H adress!" << endl;
 	}
 	return angleH;
 }
@@ -289,7 +290,7 @@ int MemoryManager::readPlayerID(int player)
 	int playerID;
 	if (!ReadProcessMemory(process_, (LPCVOID)(playerIDAdress), &playerID, sizeof(playerID), NULL))
 	{
-		MessageBox(0, "Could not read at angle H adress!", "Error!", MB_OK | MB_ICONERROR);
+		cout << "Could not read at angle H adress!" << endl;
 	}
 	return playerID;
 }
@@ -302,7 +303,7 @@ int MemoryManager::readPlayerHealth(int player)
 	int playerHealth;
 	if (!ReadProcessMemory(process_, (LPCVOID)(playerHealthAdress), &playerHealth, sizeof(playerHealth), NULL))
 	{
-		MessageBox(0, "Could not read at player health adress!", "Error!", MB_OK | MB_ICONERROR);
+		cout << "Could not read at player health adress!" << endl;
 	}
 	return playerHealth;
 }
@@ -317,7 +318,7 @@ char* MemoryManager::readPlayerName(int player)
 
 	if (!ReadProcessMemory(process_, (LPCVOID)(playerNameAdress), &playerName, 20, NULL))
 	{
-		MessageBox(0, "Could not read at player name adress!", "Error!", MB_OK | MB_ICONERROR);
+		coiut << "Could not read at player name adress!" << endl;
 	}
 	return playerName;
 }
@@ -330,7 +331,7 @@ int MemoryManager::readPlayerSide(int player)
 	char playerSide;
 	if (!ReadProcessMemory(process_, (LPCVOID)(playerSideAdress), &playerSide, sizeof(playerSide), NULL))
 	{
-		MessageBox(0, "Could not read at playe side adress!", "Error!", MB_OK | MB_ICONERROR);
+		cout << "Could not read at playe side adress!" << endl;
 	}
 	return playerSide;
 }
@@ -343,7 +344,7 @@ char MemoryManager::readPlayerShown(int player)
 	char playerShown;
 	if (!ReadProcessMemory(process_, (LPCVOID)(playerShownAdress), &playerShown, sizeof(playerShown), NULL))
 	{
-		MessageBox(0, "Could not read at player shown adress!", "Error!", MB_OK | MB_ICONERROR);
+		cout << "Could not read at player shown adress!" << endl;
 	}
 	return playerShown;
 }

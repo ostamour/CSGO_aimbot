@@ -11,11 +11,7 @@ TriggerBot::TriggerBot()
 TriggerBot::TriggerBot(MemoryManager* memoryManager)
 {
 	memoryManager_ = memoryManager;
-	for (int i = 0; i < memoryManager->countPlayers(); i++)
-	{
-		players_[i] = new Player();
-		nPlayers_++;
-	}
+	initInputs();
 }
 
 
@@ -30,6 +26,7 @@ TriggerBot::~TriggerBot()
 		}
 		players_[i] = 0;
 	}
+	initInputs();
 }
 
 
@@ -47,7 +44,6 @@ void TriggerBot::initInputs()
 	mouseUp_.mi.dx = 0;
 	mouseUp_.mi.dy = 0;
 	mouseUp_.mi.dwFlags = MOUSEEVENTF_LEFTUP;
-
 }
 
 
