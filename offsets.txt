@@ -1,0 +1,10 @@
+position X: client.dll + A90C94
+position Y: client.dll + A90C98
+position Z: 
+
+
+
+client.dll + 0x04A51FFC -> + 0x20 = radar base pointer -> radar
+
+
+
