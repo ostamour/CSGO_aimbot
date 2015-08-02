@@ -27,7 +27,40 @@ AimBot::~AimBot()
 	}
 }
 
+void AimBot::init()
+{
+	
+	
+	mouseRight_.type = INPUT_MOUSE;
+	mouseRight_.mi.mouseData = 0;
+	mouseRight_.mi.dx = 1;
+	mouseRight_.mi.dy = 0;
+	mouseRight_.mi.dwFlags = MOUSEEVENTF_MOVE;
 
+	mouseLeft_.type = INPUT_MOUSE;
+	mouseLeft_.mi.mouseData = 0;
+	mouseLeft_.mi.dx = -1;
+	mouseLeft_.mi.dy = 0;
+	mouseLeft_.mi.dwFlags = 0;
+
+	mouseUp_.type = INPUT_MOUSE;
+	mouseUp_.mi.mouseData = 0;
+	mouseUp_.mi.dx = 0;
+	mouseUp_.mi.dy = -1;
+	mouseUp_.mi.dwFlags = 0;
+
+	mouseDown_.type = INPUT_MOUSE;
+	mouseDown_.mi.mouseData = 0;
+	mouseDown_.mi.dx = 0;
+	mouseDown_.mi.dy = 1;
+	mouseDown_.mi.dwFlags = 0;
+
+	mouseStop_.type = INPUT_MOUSE;
+	mouseStop_.mi.mouseData = 0;
+	mouseStop_.mi.dx = 0;
+	mouseStop_.mi.dy = 0;
+	mouseStop_.mi.dwFlags = 0;
+}
 
 //Updates the data for all the players
 void AimBot::updateData()
@@ -43,10 +76,12 @@ void AimBot::updateData()
 			players_[i]->posY = memoryManager_->readPlayerPosY(i);
 			players_[i]->posZ = memoryManager_->readPlayerPosZ(i);
 			players_[i]->angleV = memoryManager_->readPlayerAngleV(i);
-			players_[i]->angleV = memoryManager_->readPlayerAngleH(i);
+			players_[i]->angleH = memoryManager_->readPlayerAngleH(i);
 			players_[i]->name = memoryManager_->readPlayerName(i);
 			players_[i]->side = memoryManager_->readPlayerSide(i);
 			players_[i]->shown = memoryManager_->readPlayerShown(i);
+			players_[i]->health = memoryManager_->readPlayerHealth(i);
+			players_[i]->playerID = memoryManager_->readPlayerID(i);
 		}
 	}
 }
@@ -66,11 +101,25 @@ void AimBot::updateSizeOfPlayers()
 }
 
 
-int findClosestEnemy()
+int AimBot::findClosestEnemy()
 {
-	return 0;
-
+	int closestEnemy = 0;
+	//For every player in the game
+	for (int i = 0; i < nPlayers_; i++)
+	{
+		//If the player is shown as an enemy and is alive	
+		if (players_[i]->shown == true && players_[i]->health > 0)
+		{
+			//Check if is the closest
+			if (calculateDistanceXYZ(i) < calculateDistanceXYZ(closestEnemy))
+			{
+				closestEnemy = i;
+			}
+		}
+	}
+	return closestEnemy;
 }
+
 
 
 float AimBot::calculateDistanceX(int playerID)
@@ -97,20 +146,49 @@ float AimBot::calculateDistanceXY(int playerID)
 {
 	float dPosX = calculateDistanceX(playerID);
 	float dPosY = calculateDistanceY(playerID);
-
 	//Pythagorean theorem : c^2 = a^2 + b^2.
-	double cSquared = dPosX * dPosX + dPosY * dPosY;
+	double distanceSquared = dPosX * dPosX + dPosY * dPosY;
 
-	return sqrt(cSquared);
+	return sqrt(distanceSquared);
 }
 
+float AimBot::calculateDistanceXYZ(int playerID)
+{
+	float dPosX = calculateDistanceX(playerID);
+	float dPosY = calculateDistanceY(playerID);
+	float dPosZ = calculateDistanceZ(playerID);
+	//Pythagorean theorem
+	double distanceSquared = dPosX * dPosX + dPosY * dPosY + dPosZ * dPosZ;
+	return sqrt(distanceSquared);
+}
 
 float AimBot::calculateAngleH(int playerID)
 {
 	float dPosX = calculateDistanceX(playerID);
 	float dPosY = calculateDistanceY(playerID);
 
-	return atan(dPosY / dPosX) * 180 / PI;
+	float angle = atan(dPosY / dPosX) * 180 / PI;
+	//Angle corrections because the atan function gives the angle closest to the x axis
+	if (dPosX > 0 && dPosY < 0)
+	{
+		angle += 180;
+	}
+	if (dPosX > 0 && dPosY > 0)
+	{
+		angle -= 180;
+	}
+	
+	if (dPosX < 0 && dPosY == 0)
+	{
+		angle = 179.99;
+	}
+
+	if (dPosX == 0)
+	{
+		angle = -angle;
+	}
+	
+	return angle;
 }
 
 
@@ -121,4 +199,32 @@ float AimBot::calculateAngleV(int playerID)
 	float dPosZ = calculateDistanceZ(playerID);
 
 	return atan(dPosZ / distance) * 180 / PI;
+}
+
+void AimBot::aim()
+{	
+
+}
+
+
+//Place the crosshair at the right horizontal angle
+void AimBot::placeCrosshairH(int playerID)
+{
+	float dAngle = players_[0]->angleH - calculateAngleH(playerID);
+	
+	if ( dAngle < -0.5)
+	{
+		if (!SendInput(1, &mouseLeft_, sizeof(mouseLeft_)))
+		{
+			cout << GetLastError() << endl;
+		}
+	}
+	else if (dAngle > 0.5)
+	{
+		if (!SendInput(1, &mouseRight_, sizeof(mouseLeft_)))
+		{
+			cout << GetLastError() << endl;
+		}
+	}
+	SendInput(1, &mouseStop_, sizeof(mouseStop_));
 }

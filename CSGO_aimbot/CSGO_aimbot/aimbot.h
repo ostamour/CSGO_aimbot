@@ -2,7 +2,10 @@
 #define AIMBOT
 
 #include "memory_manager.h"
+#include <iostream>
 #include <cmath>
+
+using namespace std;
 
 #define PI 3.14159
 
@@ -25,7 +28,7 @@ struct Player
 	char* name;
 
 	//If the player is shown on the radar (in line of sight)
-	bool shown;
+	char shown;
 
 	//The side of the player (t, ct or spectator)
 	int side;
@@ -38,8 +41,11 @@ public:
 	AimBot(MemoryManager* memoryManager);
 	~AimBot();
 	
+	void init();
+	
 	//Updates the data for all the players
 	void updateData();
+
 
 	//Check the number of players in the game
 	void updateSizeOfPlayers();
@@ -49,12 +55,18 @@ public:
 
 	//Calculate the player's distance from the player 1 on the X axis.
 	float calculateDistanceX(int playerID);
+
 	//Calculate the player's distance from the player 1 on the Y axis.
 	float calculateDistanceY(int playerID);
+
 	//Calculate the player's distance from the player 1 on the Z axis.
 	float calculateDistanceZ(int playerID);
+
 	//Calculate the player's distance from the player 1 on the XY plan.
 	float calculateDistanceXY(int playerID);
+
+	//Calculate the player's distance from the player 1 in the XYZ space.
+	float calculateDistanceXYZ(int playerID);
 
 	//Calculate the horizontal angle the player 1 must have to be aiming at an enemy player.
 	float calculateAngleH(int playerID);
@@ -62,8 +74,15 @@ public:
 	//Calculate the vertical angle the player 1 must have to be aiming at an enemy player.
 	float calculateAngleV(int playerID);
 
+	//Check if the crosshair is on the player on the H axis
+	bool crosshairIsOnHeadH(int playerID);
+
+	//Check if the crosshair is on the player on the V axis
+	bool crosshairIsOnHeadV(int playerID);
+
 	//Place the crosshair at the right horizontal angle
-	void placeCrosshairH();
+	void placeCrosshairH(int playerID);
+
 	//Place the crosshair at the right vertical angle
 	void placeCrosshairV();
 
@@ -74,6 +93,13 @@ private:
 	MemoryManager* memoryManager_;
 	Player* players_[MAX_N_PLAYER];
 	int nPlayers_;
+	int count_;
+
+	INPUT mouseRight_;
+	INPUT mouseLeft_;
+	INPUT mouseUp_;
+	INPUT mouseDown_;
+	INPUT mouseStop_;
 };
 
 #endif
