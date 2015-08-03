@@ -10,6 +10,9 @@ using namespace std;
 #define PI 3.14159
 
 const int MAX_N_PLAYER = 24;
+const int SCREEN_WIDTH = 1920;
+const int SCREEN_HEIGHT = 1080;
+
 
 struct Player
 {
@@ -46,7 +49,6 @@ public:
 	//Updates the data for all the players
 	void updateData();
 
-
 	//Check the number of players in the game
 	void updateSizeOfPlayers();
 
@@ -74,17 +76,24 @@ public:
 	//Calculate the vertical angle the player 1 must have to be aiming at an enemy player.
 	float calculateAngleV(int playerID);
 
+	
+	float calculateMouseAngleRatio();
+
 	//Check if the crosshair is on the player on the H axis
 	bool crosshairIsOnHeadH(int playerID);
 
 	//Check if the crosshair is on the player on the V axis
 	bool crosshairIsOnHeadV(int playerID);
+	
+	
 
 	//Place the crosshair at the right horizontal angle
 	void placeCrosshairH(int playerID);
 
 	//Place the crosshair at the right vertical angle
 	void placeCrosshairV();
+
+	void moveCursor(int posX, int posY);
 
 	//Aim at the head of the closest enemy
 	void aim();
@@ -95,11 +104,12 @@ private:
 	int nPlayers_;
 	int count_;
 
-	INPUT mouseRight_;
-	INPUT mouseLeft_;
-	INPUT mouseUp_;
-	INPUT mouseDown_;
-	INPUT mouseStop_;
+	POINT cursorPos_;
+	float pixelAngleRation_;
+	float oldDAngleH_;
+	float oldAngleV_;
+	INPUT mouseInput_;
+
 };
 
 #endif

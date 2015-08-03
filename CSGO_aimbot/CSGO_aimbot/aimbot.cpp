@@ -4,6 +4,8 @@ AimBot::AimBot()
 {
 	memoryManager_ = 0;
 	nPlayers_ = 0;
+	oldDAngleH_ = 0;
+	oldAngleV_ = 0;
 }
 
 
@@ -11,6 +13,8 @@ AimBot::AimBot(MemoryManager* memoryManager)
 {
 	memoryManager_ = memoryManager;
 	nPlayers_ = 0;
+	oldDAngleH_ = 0;
+	oldAngleV_ = 0;
 }
 
 
@@ -29,37 +33,11 @@ AimBot::~AimBot()
 
 void AimBot::init()
 {
-	
-	
-	mouseRight_.type = INPUT_MOUSE;
-	mouseRight_.mi.mouseData = 0;
-	mouseRight_.mi.dx = 1;
-	mouseRight_.mi.dy = 0;
-	mouseRight_.mi.dwFlags = MOUSEEVENTF_MOVE;
-
-	mouseLeft_.type = INPUT_MOUSE;
-	mouseLeft_.mi.mouseData = 0;
-	mouseLeft_.mi.dx = -1;
-	mouseLeft_.mi.dy = 0;
-	mouseLeft_.mi.dwFlags = 0;
-
-	mouseUp_.type = INPUT_MOUSE;
-	mouseUp_.mi.mouseData = 0;
-	mouseUp_.mi.dx = 0;
-	mouseUp_.mi.dy = -1;
-	mouseUp_.mi.dwFlags = 0;
-
-	mouseDown_.type = INPUT_MOUSE;
-	mouseDown_.mi.mouseData = 0;
-	mouseDown_.mi.dx = 0;
-	mouseDown_.mi.dy = 1;
-	mouseDown_.mi.dwFlags = 0;
-
-	mouseStop_.type = INPUT_MOUSE;
-	mouseStop_.mi.mouseData = 0;
-	mouseStop_.mi.dx = 0;
-	mouseStop_.mi.dy = 0;
-	mouseStop_.mi.dwFlags = 0;
+	mouseInput_.type = INPUT_MOUSE;
+	mouseInput_.mi.mouseData = 0;
+	mouseInput_.mi.dx = 0;
+	mouseInput_.mi.dy = 0;
+	mouseInput_.mi.dwFlags = MOUSEEVENTF_MOVE;
 }
 
 //Updates the data for all the players
@@ -84,6 +62,8 @@ void AimBot::updateData()
 			players_[i]->playerID = memoryManager_->readPlayerID(i);
 		}
 	}
+	GetCursorPos(&cursorPos_);
+	//cout << players_[0]->angleH << endl;
 }
 
 
@@ -111,7 +91,7 @@ int AimBot::findClosestEnemy()
 		if (players_[i]->shown == true && players_[i]->health > 0)
 		{
 			//Check if is the closest
-			if (calculateDistanceXYZ(i) < calculateDistanceXYZ(closestEnemy))
+			if (calculateDistanceXYZ(i) < calculateDistanceXYZ(closestEnemy) || closestEnemy == 0)
 			{
 				closestEnemy = i;
 			}
@@ -203,28 +183,44 @@ float AimBot::calculateAngleV(int playerID)
 
 void AimBot::aim()
 {	
-
+	int playerID = findClosestEnemy();
+	placeCrosshairH(playerID);
 }
 
 
 //Place the crosshair at the right horizontal angle
 void AimBot::placeCrosshairH(int playerID)
 {
-	float dAngle = players_[0]->angleH - calculateAngleH(playerID);
-	
-	if ( dAngle < -0.5)
+	float dAngle = calculateAngleH(playerID) - players_[0]->angleH;
+
+	if (playerID != 0 && dAngle != oldDAngleH_)
 	{
-		if (!SendInput(1, &mouseLeft_, sizeof(mouseLeft_)))
-		{
-			cout << GetLastError() << endl;
-		}
+		oldDAngleH_ = dAngle;
+		int x = -19.34 * dAngle;
+		moveCursor(x, 0);
 	}
-	else if (dAngle > 0.5)
-	{
-		if (!SendInput(1, &mouseRight_, sizeof(mouseLeft_)))
-		{
-			cout << GetLastError() << endl;
-		}
-	}
-	SendInput(1, &mouseStop_, sizeof(mouseStop_));
+	//moveCursor(0, 0);
+
+}
+
+
+void AimBot::moveCursor(int posX, int posY)
+{
+	mouseInput_.mi.dx = posX;
+	mouseInput_.mi.dy = posY;
+
+	SendInput(1, &mouseInput_, sizeof(mouseInput_));
+}
+
+float AimBot::calculateMouseAngleRatio()
+{
+	float  Angle1 = players_[0]->angleH;
+	int test = -100;
+	moveCursor(test, 0);
+	Sleep(100);
+	updateData();
+	float Angle2 = players_[0]->angleH;
+	float dAngle = Angle2 - Angle1;
+	float result =  test / dAngle;
+	return 0;
 }

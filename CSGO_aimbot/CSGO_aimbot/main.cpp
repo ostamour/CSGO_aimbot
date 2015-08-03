@@ -12,8 +12,9 @@ int main()
 	}
 	else
 	{
-		aimBot->init();
 		Sleep(2000);
+		aimBot->init();
+		aimBot->updateData();
 		for (;;)
 		{
 			aimBot->updateData();
