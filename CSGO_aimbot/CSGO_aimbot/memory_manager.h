@@ -50,6 +50,8 @@ public:
 	bool findCrosshairAdress();
 
 	int countPlayers();
+
+	float calculateRefreshRate(int adress);
 	
 	//Memory reading functions
 
@@ -69,6 +71,9 @@ public:
 
 	int readPlayerSide(int player);
 	char readPlayerShown(int player);
+
+	int readAdressInMemory(int adress);
+	
 
 private:
 	//Handle to window

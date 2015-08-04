@@ -209,6 +209,40 @@ int MemoryManager::countPlayers()
 
 }
 
+
+
+float MemoryManager::calculateRefreshRate(int adress)
+{
+	int value = readAdressInMemory(adress);
+	LARGE_INTEGER time1, time2;
+	long long time;
+	bool changed = false;
+
+	QueryPerformanceCounter(&time1);
+	for (int i = 0; i < 100; i++)
+	{
+		while (!changed)
+		{
+			if (value != readAdressInMemory(adress))
+			{
+				changed = true;
+			}
+			value = readAdressInMemory(adress);
+		}
+		changed = false;
+	}
+
+	QueryPerformanceCounter(&time2);
+
+	time = (time2.QuadPart - time1.QuadPart) / 100;
+
+	float timeS = time / 1000000.0;
+
+	return 1.0 / timeS;
+}
+
+
+
 int MemoryManager::readCrosshairTargetID()
 {
 	int crosshairTargetID = 0;
@@ -349,5 +383,12 @@ char MemoryManager::readPlayerShown(int player)
 	return playerShown;
 }
 
+
+int MemoryManager::readAdressInMemory(int adress)
+{
+	int value;
+	ReadProcessMemory(process_, (LPCVOID)(adress), &value, sizeof(value), NULL);
+	return value;
+}
 
 

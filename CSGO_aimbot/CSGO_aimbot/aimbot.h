@@ -8,6 +8,8 @@
 using namespace std;
 
 #define PI 3.14159
+#define PIXEL_PER_DEGREE -19.34
+
 
 const int MAX_N_PLAYER = 24;
 const int SCREEN_WIDTH = 1920;
@@ -47,7 +49,9 @@ public:
 	void init();
 	
 	//Updates the data for all the players
-	void updateData();
+	bool updateData();
+
+	bool checkDataUpdate();
 
 	//Check the number of players in the game
 	void updateSizeOfPlayers();
@@ -109,6 +113,8 @@ private:
 	float oldDAngleH_;
 	float oldAngleV_;
 	INPUT mouseInput_;
+
+	LARGE_INTEGER time1_, time2_, time_;
 
 };
 

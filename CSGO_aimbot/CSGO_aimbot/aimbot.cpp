@@ -41,15 +41,85 @@ void AimBot::init()
 }
 
 //Updates the data for all the players
-void AimBot::updateData()
+bool AimBot::updateData()
 {
+	bool dataUpdated = false;
 	//Have the right amoount of players before updating
 	updateSizeOfPlayers();
+	
+	
+
 	//For every player, update info from the memory
 	for (int i = 0; i < nPlayers_; i++)
 	{
 		if (players_[i] != 0)
 		{
+			
+
+			/*
+			float posY = memoryManager_->readPlayerPosY(i);
+			if (players_[i]->posY != posY)
+			{
+				players_[i]->posY = posY;
+				dataUpdated = true;
+			}
+
+			float posZ = memoryManager_->readPlayerPosZ(i);
+			if (players_[i]->posZ != posZ)
+			{
+				players_[i]->posZ = posZ;
+				dataUpdated = true;
+			}
+
+			float angleV = memoryManager_->readPlayerAngleV(i);
+			if (players_[i]->angleV != angleV)
+			{
+				players_[i]->angleV = angleV;
+				dataUpdated = true;
+			}
+
+			float angleH = memoryManager_->readPlayerAngleH(i);
+			if (players_[i]->angleH != angleH)
+			{
+				players_[i]->angleH = angleH;
+				dataUpdated = true;
+			}
+
+			char* name = memoryManager_->readPlayerName(i);
+			if (players_[i]->name != name)
+			{
+				players_[i]->name = name;
+				dataUpdated = true;
+			}
+
+			int side = memoryManager_->readPlayerSide(i);
+			if (players_[i]->side != side)
+			{
+				players_[i]->side = side;
+				dataUpdated = true;
+			}
+			
+			char shown = memoryManager_->readPlayerShown(i);
+			if (players_[i]->shown != shown)
+			{
+				players_[i]->shown = shown;
+				dataUpdated = true;
+			}
+
+			int health = memoryManager_->readPlayerHealth(i);
+			if (players_[i]->health != health)
+			{
+				players_[i]->health = health;
+				dataUpdated = true;
+			}
+
+			int playerID = memoryManager_->readPlayerID(i);
+			if (players_[i]->playerID != playerID)
+			{
+				players_[i]->playerID = playerID;
+				dataUpdated = true;
+			}
+			*/
 			players_[i]->posX = memoryManager_->readPlayerPosX(i);
 			players_[i]->posY = memoryManager_->readPlayerPosY(i);
 			players_[i]->posZ = memoryManager_->readPlayerPosZ(i);
@@ -60,13 +130,25 @@ void AimBot::updateData()
 			players_[i]->shown = memoryManager_->readPlayerShown(i);
 			players_[i]->health = memoryManager_->readPlayerHealth(i);
 			players_[i]->playerID = memoryManager_->readPlayerID(i);
+
 		}
 	}
-	GetCursorPos(&cursorPos_);
+	//GetCursorPos(&cursorPos_);
 	//cout << players_[0]->angleH << endl;
+	//return dataUpdated;
+	return dataUpdated;
 }
 
-
+bool AimBot::checkDataUpdate()
+{
+	bool success = false;
+	if (players_[0]->posX != memoryManager_->readPlayerPosX(0))
+	{
+		players_[0]->posX = memoryManager_->readPlayerPosX(0);
+		success = true;
+	}
+	return success;
+}
 
 void AimBot::updateSizeOfPlayers()
 {
@@ -196,7 +278,7 @@ void AimBot::placeCrosshairH(int playerID)
 	if (playerID != 0 && dAngle != oldDAngleH_)
 	{
 		oldDAngleH_ = dAngle;
-		int x = -19.34 * dAngle;
+		int x = PIXEL_PER_DEGREE * dAngle;
 		moveCursor(x, 0);
 	}
 	//moveCursor(0, 0);
