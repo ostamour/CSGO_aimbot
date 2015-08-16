@@ -4,8 +4,6 @@ AimBot::AimBot()
 {
 	memoryManager_ = 0;
 	nPlayers_ = 0;
-	oldDAngleH_ = 0;
-	oldAngleV_ = 0;
 }
 
 
@@ -13,8 +11,6 @@ AimBot::AimBot(MemoryManager* memoryManager)
 {
 	memoryManager_ = memoryManager;
 	nPlayers_ = 0;
-	oldDAngleH_ = 0;
-	oldAngleV_ = 0;
 }
 
 
@@ -31,120 +27,37 @@ AimBot::~AimBot()
 	}
 }
 
-void AimBot::init()
-{
-	mouseInput_.type = INPUT_MOUSE;
-	mouseInput_.mi.mouseData = 0;
-	mouseInput_.mi.dx = 0;
-	mouseInput_.mi.dy = 0;
-	mouseInput_.mi.dwFlags = MOUSEEVENTF_MOVE;
-}
 
 //Updates the data for all the players
-bool AimBot::updateData()
+void AimBot::updateData()
 {
-	bool dataUpdated = false;
-	//Have the right amoount of players before updating
+	//Have the right amount of players before updating
 	updateSizeOfPlayers();
-	
-	
-
 	//For every player, update info from the memory
 	for (int i = 0; i < nPlayers_; i++)
 	{
 		if (players_[i] != 0)
 		{
-			
-
-			/*
-			float posY = memoryManager_->readPlayerPosY(i);
-			if (players_[i]->posY != posY)
-			{
-				players_[i]->posY = posY;
-				dataUpdated = true;
-			}
-
-			float posZ = memoryManager_->readPlayerPosZ(i);
-			if (players_[i]->posZ != posZ)
-			{
-				players_[i]->posZ = posZ;
-				dataUpdated = true;
-			}
-
-			float angleV = memoryManager_->readPlayerAngleV(i);
-			if (players_[i]->angleV != angleV)
-			{
-				players_[i]->angleV = angleV;
-				dataUpdated = true;
-			}
-
-			float angleH = memoryManager_->readPlayerAngleH(i);
-			if (players_[i]->angleH != angleH)
-			{
-				players_[i]->angleH = angleH;
-				dataUpdated = true;
-			}
-
-			char* name = memoryManager_->readPlayerName(i);
-			if (players_[i]->name != name)
-			{
-				players_[i]->name = name;
-				dataUpdated = true;
-			}
-
-			int side = memoryManager_->readPlayerSide(i);
-			if (players_[i]->side != side)
-			{
-				players_[i]->side = side;
-				dataUpdated = true;
-			}
-			
-			char shown = memoryManager_->readPlayerShown(i);
-			if (players_[i]->shown != shown)
-			{
-				players_[i]->shown = shown;
-				dataUpdated = true;
-			}
-
-			int health = memoryManager_->readPlayerHealth(i);
-			if (players_[i]->health != health)
-			{
-				players_[i]->health = health;
-				dataUpdated = true;
-			}
-
-			int playerID = memoryManager_->readPlayerID(i);
-			if (players_[i]->playerID != playerID)
-			{
-				players_[i]->playerID = playerID;
-				dataUpdated = true;
-			}
-			*/
-			players_[i]->posX = memoryManager_->readPlayerPosX(i);
-			players_[i]->posY = memoryManager_->readPlayerPosY(i);
-			players_[i]->posZ = memoryManager_->readPlayerPosZ(i);
-			players_[i]->angleV = memoryManager_->readPlayerAngleV(i);
-			players_[i]->angleH = memoryManager_->readPlayerAngleH(i);
-			players_[i]->name = memoryManager_->readPlayerName(i);
-			players_[i]->side = memoryManager_->readPlayerSide(i);
-			players_[i]->shown = memoryManager_->readPlayerShown(i);
-			players_[i]->health = memoryManager_->readPlayerHealth(i);
-			players_[i]->playerID = memoryManager_->readPlayerID(i);
-
+			players_[i]->posX = memoryManager_->readPosX(i);
+			players_[i]->posY = memoryManager_->readPosY(i);
+			players_[i]->posZ = memoryManager_->readPosZ(i);
+			players_[i]->angleV = memoryManager_->readAngleV(i);
+			players_[i]->angleH = memoryManager_->readAngleH(i);
+			players_[i]->side = memoryManager_->readSide(i);
+			players_[i]->shown = memoryManager_->readShown(i);
+			players_[i]->health = memoryManager_->readHealth(i);
+			players_[i]->playerID = memoryManager_->readID(i);
 		}
 	}
-	//GetCursorPos(&cursorPos_);
-	//cout << players_[0]->angleH << endl;
-	//return dataUpdated;
-	return dataUpdated;
+
 }
 
 bool AimBot::checkDataUpdate()
 {
 	bool success = false;
-	if (players_[0]->posX != memoryManager_->readPlayerPosX(0))
+	if (players_[0]->posX != memoryManager_->readPosX(0))
 	{
-		players_[0]->posX = memoryManager_->readPlayerPosX(0);
+		players_[0]->posX = memoryManager_->readPosX(0);
 		success = true;
 	}
 	return success;
@@ -166,13 +79,13 @@ void AimBot::updateSizeOfPlayers()
 int AimBot::findClosestEnemy()
 {
 	int closestEnemy = 0;
-	//For every player in the game
+	//For every player in the game.
 	for (int i = 0; i < nPlayers_; i++)
 	{
-		//If the player is shown as an enemy and is alive	
-		if (players_[i]->shown == true && players_[i]->health > 0)
+		//If the player is shown as an enemy and is alive.	
+		if (players_[i]->shown == true && players_[i]->health > 0 && players_[i] ->side != players_[0]->side)
 		{
-			//Check if is the closest
+			//Check if he is the closest.
 			if (calculateDistanceXYZ(i) < calculateDistanceXYZ(closestEnemy) || closestEnemy == 0)
 			{
 				closestEnemy = i;
@@ -267,42 +180,26 @@ void AimBot::aim()
 {	
 	int playerID = findClosestEnemy();
 	placeCrosshairH(playerID);
+	placeCrosshairV(playerID);
 }
 
 
-//Place the crosshair at the right horizontal angle
+//Place the crosshair at the right horizontal angle.
 void AimBot::placeCrosshairH(int playerID)
 {
-	float dAngle = calculateAngleH(playerID) - players_[0]->angleH;
-
-	if (playerID != 0 && dAngle != oldDAngleH_)
+	float angleH = calculateAngleH(playerID);
+	if (playerID != 0)
 	{
-		oldDAngleH_ = dAngle;
-		int x = PIXEL_PER_DEGREE * dAngle;
-		moveCursor(x, 0);
+		memoryManager_->writeLocalAngleH(angleH);
 	}
-	//moveCursor(0, 0);
-
 }
 
-
-void AimBot::moveCursor(int posX, int posY)
+void AimBot::placeCrosshairV(int playerID)
 {
-	mouseInput_.mi.dx = posX;
-	mouseInput_.mi.dy = posY;
-
-	SendInput(1, &mouseInput_, sizeof(mouseInput_));
+	float angleV = calculateAngleV(playerID);
+	if (playerID != 0)
+	{
+		memoryManager_->writeLocalAngleV(angleV);
+	}
 }
 
-float AimBot::calculateMouseAngleRatio()
-{
-	float  Angle1 = players_[0]->angleH;
-	int test = -100;
-	moveCursor(test, 0);
-	Sleep(100);
-	updateData();
-	float Angle2 = players_[0]->angleH;
-	float dAngle = Angle2 - Angle1;
-	float result =  test / dAngle;
-	return 0;
-}

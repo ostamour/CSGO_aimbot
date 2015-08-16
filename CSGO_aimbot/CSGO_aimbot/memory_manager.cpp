@@ -48,19 +48,37 @@ bool MemoryManager::init()
 			}
 			else
 			{
-				//Find the radar base adress
-				if (!findRadarBaseAdress())
+				engineModuleAdress_ = findModuleHandle(ENGINE_MODULE_NAME);
+				if (engineModuleAdress_ == 0)
 				{
-					cout << "Could not find radar base adress!" << endl;
+					cout << "Could not find engine module adress!" << endl;
 					success = false;
 				}
-				//Find the crosshair adress
-				if (!findCrosshairAdress())
+				else
 				{
-					cout << "Could not find crosshair adress!" << endl;
-					success = false;
+					findEntityListAdress();
+					if (!findPlayerBaseAdresses())
+					{
+						cout << "Could not find playerbase adresses!" << endl;
+						success = false;
+					}
+					else
+					{
+						if(!findBoneMatrixAdresses())
+						{
+							cout << "Could not find bone matrix adresses!" << endl;
+							success = false;
+						}
+						else
+						{
+							if (!findClientStateAdress())
+							{
+								cout << "Could not find client state adress!" << endl;
+								success = false;
+							}
+						}
+					}
 				}
-
 			}
 		}
 	}
@@ -69,33 +87,41 @@ bool MemoryManager::init()
 
 
 
+void MemoryManager::close()
+{
+
+}
+
+
+
 bool MemoryManager::findNameInPath(string name, TCHAR* path, int nLetters)
 {
 	bool letterFound = false;
-	int i = 0;
+	int nRightLetters = 0;
 
-	//For every character in the path,
-	for (int j = 0; j < nLetters; j++)
+	//For every character in the path.
+	for (int i = 0; i < nLetters; i++)
 	{
-		//if the backslashes are found,
-		if (path[j] == '\\')
+		//If the backslashes are found.
+		if (path[i] == '\\')
 		{
-			j++;
+			i++;
 			letterFound = true;
-			//check if this is the name we are looking for.
-			for (int k = 0; k < name.size() && letterFound == true; k++)
+			//Check if this is the name we are looking for.
+			for (int j = 0; j < name.size() && letterFound == true; j++)
 			{
 				//If this is the right letter.
-				if (path[j + k] == name[k])
+				if (path[i + j] == name[j])
 				{
-					//If the letter is the same as the last letter
-					if (path[j+k] == name[name.size() - 1])
+					nRightLetters++;
+					//If all the letters in the name are right.
+					if (nRightLetters == name.size())
 					{
 						//The name is found.
 						return true;
 					}
 				}
-				//If the letter is not right, go back at searching backslashes
+				//If the letter is not right, go back at searching backslashes.
 				else
 				{
 					letterFound = false;
@@ -129,10 +155,11 @@ HMODULE MemoryManager::findModuleHandle(string name)
 			// Get the full path to the module's file.
 			if (GetModuleFileNameEx(process_, modules[i], path, nLetters))
 			{
+				//Search for the right module with the path.
 				if (findNameInPath(name, path, nLetters))
 				{
 					return modules[i];
-				}
+				}				
 			}
 		}
 	}
@@ -141,72 +168,15 @@ HMODULE MemoryManager::findModuleHandle(string name)
 
 
 
-bool MemoryManager::findRadarBaseAdress()
-{
-	int staticPointerAdress = (int)clientModuleAdress_ + RADAR_STATIC_POINTER_OFFSET;
-	int dynamicPointerAdress;
-	//Read the adress of the dynamic pointer.
-	if (!ReadProcessMemory(process_, (LPCVOID)(staticPointerAdress), &dynamicPointerAdress, sizeof(dynamicPointerAdress), NULL))
-	{
-		cout << "Could not read at static pointer adress!" << endl;
-		return false;
-	}
-	else
-	{
-		//Add the offset to get the base adress of the radar structure.
-		dynamicPointerAdress += RADAR_DYNAMIC_POINTER_OFFSET;
-		//Read the base adress of the radar structure.
-		if (!ReadProcessMemory(process_, (LPCVOID)(dynamicPointerAdress), &radarBaseAdress_, sizeof(radarBaseAdress_), NULL))
-		{ 
-			cout << "Could not read at dynamic pointer adress!" << endl;
-			return false;
-		}
-		else
-		{
-			return true;
-		}
-	}
-}
-
-bool MemoryManager::findCrosshairAdress()
-{
-	int staticPointerAdress = (int)clientModuleAdress_ + CROSSHAIR_STATIC_POINTER_OFFSET;
-	int dynamicPointerAdress;
-	if (!ReadProcessMemory(process_, (LPCVOID)(staticPointerAdress), &dynamicPointerAdress, sizeof(dynamicPointerAdress), NULL))
-	{
-		cout << "Could not read at static pointer adress!" << endl;
-		return false;
-	}
-	else
-	{
-		//Add the offset to get the base adress of the structure.
-		dynamicPointerAdress += CROSSHAIR_DYNAMIC_POINTER_OFFSET;
-		//Read the base adress of the structure.
-		if (!ReadProcessMemory(process_, (LPCVOID)(dynamicPointerAdress), &crosshairAdress_, sizeof(crosshairAdress_), NULL))
-		{
-			cout << "Could not read at dynamic pointer adress!" << endl;
-			return false;
-		}
-		else
-		{
-			//Add the offset to get the crosshair adress
-			crosshairAdress_ += CROSSHAIR_STRUCTURE_OFFSET;
-			return true;
-		}
-	}
-}
-
 int MemoryManager::countPlayers()
 {
 	int count = 0;
-	//For every player in the game
-	while (readPlayerID(count) != 0)
+	//Check the next pointer until it's null (end of the list).
+	while (readPlayerBaseAdress(count) != 0)
 	{
-		//If the player is an enemy
 		count++;
 	}
 	return count;
-
 }
 
 
@@ -214,15 +184,17 @@ int MemoryManager::countPlayers()
 float MemoryManager::calculateRefreshRate(int adress)
 {
 	int value = readAdressInMemory(adress);
-	LARGE_INTEGER time1, time2;
+	LARGE_INTEGER tick1, tick2;
 	long long time;
 	bool changed = false;
 
-	QueryPerformanceCounter(&time1);
+	//Check the time at the start of the scan.
+	QueryPerformanceCounter(&tick1);
 	for (int i = 0; i < 100; i++)
 	{
 		while (!changed)
 		{
+			//If the value has changed
 			if (value != readAdressInMemory(adress))
 			{
 				changed = true;
@@ -231,33 +203,97 @@ float MemoryManager::calculateRefreshRate(int adress)
 		}
 		changed = false;
 	}
-
-	QueryPerformanceCounter(&time2);
-
-	time = (time2.QuadPart - time1.QuadPart) / 100;
-
+	//Check the time at the end of the scan.
+	QueryPerformanceCounter(&tick2);
+	//Get the time average in microseconds.
+	time = (tick2.QuadPart - tick1.QuadPart) / 100.0;
+	//Convert the time in seconds (1 000 000 us / s).
 	float timeS = time / 1000000.0;
-
+	//Return the frequency (f = 1 / t).
 	return 1.0 / timeS;
 }
 
 
 
-int MemoryManager::readCrosshairTargetID()
+void MemoryManager::findEntityListAdress()
 {
-	int crosshairTargetID = 0;
-	if (!ReadProcessMemory(process_, (LPCVOID)(crosshairAdress_), &crosshairTargetID, sizeof(crosshairTargetID), NULL))
-	{
-		cout << "Could not read at crosshair adress!" << endl;
-	}
-	return crosshairTargetID;
+	entityListAdress_ = (int)clientModuleAdress_ + ENTITY_LIST_OFFSET;
 }
 
-float MemoryManager::readPlayerPosX(int player)
+
+
+bool MemoryManager::findPlayerBaseAdresses()
 {
-	int playerPosXAdress = radarBaseAdress_ + player * SIZE_OF_RADAR_STRUCTURE + POSITION_X_OFFSET;
+	bool success = false;
+	int nPlayers = countPlayers();
+	for (int i = 0; i < nPlayers; i++)
+	{
+		playerBaseAdresses_[i] = readPlayerBaseAdress(i);
+		success = true;
+	}
+	return success;
+}
+
+bool MemoryManager::findBoneMatrixAdresses()
+{
+	bool success = false;
+	int nPlayers = countPlayers();
+	for (int i = 0; i < nPlayers; i++)
+	{
+		boneMatrixAdresses_[i] = readBoneMatrixAdress(i);
+		success = true;
+	}
+	return success;
+}
+
+bool MemoryManager::findClientStateAdress()
+{
+	bool success = true;
+	int ClientStatePointerAdress = (int)engineModuleAdress_ + CLIENT_STATE_OFFSET;
+	if (!ReadProcessMemory(process_, (LPCVOID)ClientStatePointerAdress, &clientStateAdress_, sizeof(clientStateAdress_), NULL))
+	{
+		cout << "Could not read at client state pointer adress!" << endl;
+		success = false;
+	}
+	return success;
+}
+
+
+
+int MemoryManager::readPlayerBaseAdress(int playerID)
+{
+	int playerBasePointerAdress = entityListAdress_ + PLAYERBASE_OFFSET * playerID;
+	int playerBaseAdress = 0;
+	if (!ReadProcessMemory(process_, (LPCVOID)playerBasePointerAdress, &playerBaseAdress, sizeof(playerBaseAdress), NULL))
+	{
+		cout << "Could not read at static pointer adress!" << endl;
+		return 0;
+	}
+	return playerBaseAdress;
+
+}
+
+
+
+int MemoryManager::readBoneMatrixAdress(int playerID)
+{
+	int boneMatrixPointerAdress = playerBaseAdresses_[playerID] + BONE_MATRIC_OFFSET;
+	int boneMatrixAdress = 0;
+	if (!ReadProcessMemory(process_, (LPCVOID)boneMatrixPointerAdress, &boneMatrixAdress, sizeof(boneMatrixAdress), NULL))
+	{
+		cout << "Could not read at bone matrix pointer adress" << endl;
+		return 0;
+	}
+	return boneMatrixAdress;
+}
+
+
+
+float MemoryManager::readPosX(int player)
+{
+	int posXAdress = playerBaseAdresses_[player] + POSITION_X_OFFSET;
 	float posX;
-	if (!ReadProcessMemory(process_, (LPCVOID)(playerPosXAdress), &posX, sizeof(posX), NULL))
+	if (!ReadProcessMemory(process_, (LPCVOID)posXAdress, &posX, sizeof(posX), NULL))
 	{
 		cout << "Could not read at position X adress!" << endl;
 	}
@@ -266,11 +302,11 @@ float MemoryManager::readPlayerPosX(int player)
 
 
 
-float MemoryManager::readPlayerPosY(int player)
+float MemoryManager::readPosY(int player)
 {
-	int playerPosYAdress = radarBaseAdress_ + player * SIZE_OF_RADAR_STRUCTURE + POSITION_Y_OFFSET;
+	int posYAdress = playerBaseAdresses_[player] + POSITION_Y_OFFSET;
 	float posY;
-	if (!ReadProcessMemory(process_, (LPCVOID)(playerPosYAdress), &posY, sizeof(posY), NULL))
+	if (!ReadProcessMemory(process_, (LPCVOID)posYAdress, &posY, sizeof(posY), NULL))
 	{
 		cout << "Could not read at position Y adress!" << endl;
 	}
@@ -279,11 +315,11 @@ float MemoryManager::readPlayerPosY(int player)
 
 
 
-float MemoryManager::readPlayerPosZ(int player)
+float MemoryManager::readPosZ(int player)
 {
-	int playerPosZAdress = radarBaseAdress_ + player * SIZE_OF_RADAR_STRUCTURE + POSITION_Z_OFFSET;
+	int posZAdress = playerBaseAdresses_[player]  + POSITION_Z_OFFSET;
 	float posZ;
-	if (!ReadProcessMemory(process_, (LPCVOID)(playerPosZAdress), &posZ, sizeof(posZ), NULL))
+	if (!ReadProcessMemory(process_, (LPCVOID)posZAdress, &posZ, sizeof(posZ), NULL))
 	{
 		cout << "Could not read at position Z adress!" << endl;
 	}
@@ -292,11 +328,50 @@ float MemoryManager::readPlayerPosZ(int player)
 
 
 
-float MemoryManager::readPlayerAngleV(int player)
+float MemoryManager::readHeadPosX(int player)
 {
-	int playerAngleVAdress = radarBaseAdress_ + player * SIZE_OF_RADAR_STRUCTURE + ANGLE_V_OFFSET;
+	int headPosXAdress = boneMatrixAdresses_[player] + BONE_STRUCT_SIZE * HEAD_BONE_ID + 0x00;
+	float headPosX;
+	if (!ReadProcessMemory(process_, (LPCVOID)headPosXAdress, &headPosX, sizeof(headPosX), NULL))
+	{
+		cout << "Could not read at position Z adress!" << endl;
+	}
+	return headPosX;
+}
+
+
+
+float MemoryManager::readHeadPosY(int player)
+{
+	int headPosYAdress = boneMatrixAdresses_[player] + BONE_STRUCT_SIZE * HEAD_BONE_ID + 0x04;
+	float headPosY;
+	if (!ReadProcessMemory(process_, (LPCVOID)headPosYAdress, &headPosY, sizeof(headPosY), NULL))
+	{
+		cout << "Could not read at position Z adress!" << endl;
+	}
+	return headPosY;
+}
+
+
+
+float MemoryManager::readHeadPosZ(int player)
+{
+	int headPosZAdress = boneMatrixAdresses_[player] + BONE_STRUCT_SIZE * HEAD_BONE_ID + 0x08;
+	float headPosZ;
+	if (!ReadProcessMemory(process_, (LPCVOID)headPosZAdress, &headPosZ, sizeof(headPosZ), NULL))
+	{
+		cout << "Could not read at position Z adress!" << endl;
+	}
+	return headPosZ;
+}
+
+
+
+float MemoryManager::readAngleV(int player)
+{
+	int angleVAdress = playerBaseAdresses_[player] + ANGLE_V_OFFSET;
 	float angleV;
-	if (!ReadProcessMemory(process_, (LPCVOID)(playerAngleVAdress), &angleV, sizeof(angleV), NULL))
+	if (!ReadProcessMemory(process_, (LPCVOID)angleVAdress, &angleV, sizeof(angleV), NULL))
 	{
 		cout << "Could not read at angle V adress!" << endl;
 	}
@@ -305,11 +380,11 @@ float MemoryManager::readPlayerAngleV(int player)
 
 
 
-float MemoryManager::readPlayerAngleH(int player)
+float MemoryManager::readAngleH(int player)
 {
-	int playerAngleHAdress = radarBaseAdress_ + player * SIZE_OF_RADAR_STRUCTURE + ANGLE_H_OFFSET;
+	int angleHAdress = playerBaseAdresses_[player] + ANGLE_H_OFFSET;
 	float angleH;
-	if (!ReadProcessMemory(process_, (LPCVOID)(playerAngleHAdress), &angleH, sizeof(angleH), NULL))
+	if (!ReadProcessMemory(process_, (LPCVOID)angleHAdress, &angleH, sizeof(angleH), NULL))
 	{
 		cout << "Could not read at angle H adress!" << endl;
 	}
@@ -318,52 +393,91 @@ float MemoryManager::readPlayerAngleH(int player)
 
 
 
-int MemoryManager::readPlayerID(int player)
+float MemoryManager::readLocalAngleV()
 {
-	int playerIDAdress = radarBaseAdress_ + player * SIZE_OF_RADAR_STRUCTURE + PLAYER_ID_OFFSET;
-	int playerID;
-	if (!ReadProcessMemory(process_, (LPCVOID)(playerIDAdress), &playerID, sizeof(playerID), NULL))
+	int angleVAdress = clientStateAdress_ + VIEW_ANGLES_V_OFFSET;
+	float angleV = 0;
+	if (!ReadProcessMemory(process_, (LPCVOID)angleVAdress, &angleV, sizeof(angleV), NULL))
+	{
+		cout << "Could not read at angle V adress!" << endl;
+	}
+	return angleV;
+}
+
+
+
+float MemoryManager::readLocalAngleH()
+{
+	int angleHAdress = clientStateAdress_ + VIEW_ANGLES_H_OFFSET;
+	float angleH = 0;
+	if (!ReadProcessMemory(process_, (LPCVOID)angleHAdress, &angleH, sizeof(angleH), NULL))
 	{
 		cout << "Could not read at angle H adress!" << endl;
+	}
+	return angleH;
+}
+
+
+//[-89.00, 89.00]
+bool MemoryManager::writeLocalAngleV(float angleV)
+{
+	bool success = true;
+	int angleVAdress = clientStateAdress_ + VIEW_ANGLES_V_OFFSET;
+	if (!WriteProcessMemory(process_, (LPVOID)angleVAdress, &angleV, sizeof(angleV), NULL))
+	{
+		cout << "Could not read at angle V adress!" << endl;
+		success = false;
+	}
+	return success;
+}
+
+
+
+bool MemoryManager::writeLocalAngleH(float angleH)
+{
+	bool success = true;
+	int angleHAdress = clientStateAdress_ + VIEW_ANGLES_H_OFFSET;
+	if (!WriteProcessMemory(process_, (LPVOID)angleHAdress, &angleH, sizeof(angleH), NULL))
+	{
+		cout << "Could not read at angle V adress!" << endl;
+		success = false;
+	}
+	return success;
+}
+
+
+
+int MemoryManager::readID(int player)
+{
+	int playerIDAdress = playerBaseAdresses_[player] + PLAYER_ID_OFFSET;
+	int playerID;
+	if (!ReadProcessMemory(process_, (LPCVOID)playerIDAdress, &playerID, sizeof(playerID), NULL))
+	{
+		cout << "Could not read at player ID adress!" << endl;
 	}
 	return playerID;
 }
 
 
 
-int MemoryManager::readPlayerHealth(int player)
+int MemoryManager::readHealth(int player)
 {
-	int playerHealthAdress = radarBaseAdress_ + player * SIZE_OF_RADAR_STRUCTURE + PLAYER_HEALTH_OFFSET;
-	int playerHealth;
-	if (!ReadProcessMemory(process_, (LPCVOID)(playerHealthAdress), &playerHealth, sizeof(playerHealth), NULL))
+	int healthAdress = playerBaseAdresses_[player] + HEALTH_OFFSET;
+	int health;
+	if (!ReadProcessMemory(process_, (LPCVOID)healthAdress, &health, sizeof(health), NULL))
 	{
 		cout << "Could not read at player health adress!" << endl;
 	}
-	return playerHealth;
-}
-
-
-
-char* MemoryManager::readPlayerName(int player)
-{
-	int  playerNameAdress = radarBaseAdress_ + player * SIZE_OF_RADAR_STRUCTURE + PLAYER_NAME_OFFSET;
-	
-	char playerName[20];
-
-	if (!ReadProcessMemory(process_, (LPCVOID)(playerNameAdress), &playerName, 20, NULL))
-	{
-		cout << "Could not read at player name adress!" << endl;
-	}
-	return playerName;
+	return health;
 }
 
 
 //t = 0xD, ct = 0x11
-int MemoryManager::readPlayerSide(int player)
+int MemoryManager::readSide(int player)
 {
-	int  playerSideAdress = radarBaseAdress_ + player * SIZE_OF_RADAR_STRUCTURE + PLAYER_SIDE_OFFSET;
+	int  playerSideAdress = playerBaseAdresses_[player]  + SIDE_OFFSET;
 	char playerSide;
-	if (!ReadProcessMemory(process_, (LPCVOID)(playerSideAdress), &playerSide, sizeof(playerSide), NULL))
+	if (!ReadProcessMemory(process_, (LPCVOID)playerSideAdress, &playerSide, sizeof(playerSide), NULL))
 	{
 		cout << "Could not read at playe side adress!" << endl;
 	}
@@ -372,11 +486,11 @@ int MemoryManager::readPlayerSide(int player)
 
 
 // 1 = true, 0 = false, 9 = ally
-char MemoryManager::readPlayerShown(int player)
+char MemoryManager::readShown(int player)
 {
-	int  playerShownAdress = radarBaseAdress_ + player * SIZE_OF_RADAR_STRUCTURE + PLAYER_SHOWN_OFFSET;
+	int  playerShownAdress = playerBaseAdresses_[player] + SHOWN_OFFSET;
 	char playerShown;
-	if (!ReadProcessMemory(process_, (LPCVOID)(playerShownAdress), &playerShown, sizeof(playerShown), NULL))
+	if (!ReadProcessMemory(process_, (LPCVOID)playerShownAdress, &playerShown, sizeof(playerShown), NULL))
 	{
 		cout << "Could not read at player shown adress!" << endl;
 	}
@@ -384,10 +498,24 @@ char MemoryManager::readPlayerShown(int player)
 }
 
 
+
+int MemoryManager::readCrosshairTargetID(int player)
+{
+	int crosshairIDAdress = playerBaseAdresses_[player] + CROSSHAIR_ID_OFFSET;
+	int crosshairTargetID = 0;
+	if (!ReadProcessMemory(process_, (LPCVOID)crosshairIDAdress, &crosshairTargetID, sizeof(crosshairTargetID), NULL))
+	{
+		cout << "Could not read at crosshair adress!" << endl;
+	}
+	return crosshairTargetID;
+}
+
+
+
 int MemoryManager::readAdressInMemory(int adress)
 {
 	int value;
-	ReadProcessMemory(process_, (LPCVOID)(adress), &value, sizeof(value), NULL);
+	ReadProcessMemory(process_, (LPCVOID)adress, &value, sizeof(value), NULL);
 	return value;
 }
 

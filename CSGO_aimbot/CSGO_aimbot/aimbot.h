@@ -11,7 +11,6 @@ using namespace std;
 #define PIXEL_PER_DEGREE -19.34
 
 
-const int MAX_N_PLAYER = 24;
 const int SCREEN_WIDTH = 1920;
 const int SCREEN_HEIGHT = 1080;
 
@@ -23,6 +22,10 @@ struct Player
 	float posY;
 	float posZ;
 
+	float headPosX;
+	float headPosY;
+	float headPosZ;
+
 	//The angle the player is aiming
 	float angleV;
 	float angleH;
@@ -30,12 +33,11 @@ struct Player
 	//Player general info
 	int playerID;
 	int health;
-	char* name;
 
 	//If the player is shown on the radar (in line of sight)
 	char shown;
 
-	//The side of the player (t, ct or spectator)
+	//The side of the player (t = 2, ct = 3 or spectator)
 	int side;
 };
 
@@ -46,10 +48,10 @@ public:
 	AimBot(MemoryManager* memoryManager);
 	~AimBot();
 	
-	void init();
+	void initMouseInput();
 	
 	//Updates the data for all the players
-	bool updateData();
+	void updateData();
 
 	bool checkDataUpdate();
 
@@ -95,7 +97,7 @@ public:
 	void placeCrosshairH(int playerID);
 
 	//Place the crosshair at the right vertical angle
-	void placeCrosshairV();
+	void placeCrosshairV(int playerID);
 
 	void moveCursor(int posX, int posY);
 
@@ -103,19 +105,10 @@ public:
 	void aim();
 
 private:
-	MemoryManager* memoryManager_;
 	Player* players_[MAX_N_PLAYER];
+	MemoryManager* memoryManager_;
 	int nPlayers_;
 	int count_;
-
-	POINT cursorPos_;
-	float pixelAngleRation_;
-	float oldDAngleH_;
-	float oldAngleV_;
-	INPUT mouseInput_;
-
-	LARGE_INTEGER time1_, time2_, time_;
-
 };
 
 #endif
