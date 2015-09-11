@@ -1,0 +1,25 @@
+Entity list: client.dll + 04A1D3A4 -> playerbase
+					+10 -> players
+
+
+
+Index: 			playerbase + 0x0064
+TeamNumber:		playerbase + 0x00F0
+Health: 		playerbase + 0x00FC
+
+PosX: 			playerbase + 0x0134
+PosY: 			playerbase + 0x0138
+PosZ:			playerbase + 0x013C
+
+AngleV: 		playerbase + 0x158C
+AngleH: 		playerbase + 0x00C8 / playerbase + 0xD4
+
+Spotted: 		playerbase + 0x0935
+CrosshairID: 		playerbase + 0x2410
+armor:			playerbase + 0x23B0
+
+
+2AF30230
+2DE45240
+2C26F0B0
+2C78FCB0
