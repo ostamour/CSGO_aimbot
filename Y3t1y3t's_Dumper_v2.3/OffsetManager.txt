@@ -1,0 +1,65 @@
+- - - - - - Tool by Y3t1y3t ( uc ) - - - - - - 
+| -> http://www.unknowncheats.me/forum/counterstrike-global-offensive/100856-cs-go-offset-dumper-small-one.html
+| -> Wed Sep 09 12:47:59 2015
+- -
+
+DT_WeaponCSBase -> m_fAccuracyPenalty: ________ 0x00001670
+DT_BaseAnimating -> m_nForceBone: _____________ 0x00000A5C
+DT_BaseCombatWeapon -> m_iState: ______________ 0x000015B4
+DT_BaseCombatWeapon -> m_iClip1: ______________ 0x000015C0
+DT_BaseCombatWeapon -> m_flNextPrimaryAttack: _ 0x0000159C
+DT_BaseCombatWeapon -> m_bCanReload: __________ 0x000015F9
+DT_BaseCombatWeapon -> m_iPrimaryAmmoType: ____ 0x000015B8
+DT_BaseCombatWeapon -> m_iWeaponID: ___________ 0x00001690
+DT_BaseEntity -> m_bSpotted: __________________ 0x00000935
+DT_BaseEntity -> m_bSpottedByMask: ____________ 0x00000978
+DT_BaseEntity -> m_hOwnerEntity: ______________ 0x00000148
+DT_BaseEntity -> m_vecOrigin: _________________ 0x00000134
+DT_BaseEntity -> m_iTeamNum: __________________ 0x000000F0
+DT_CSPlayer -> m_flFlashMaxAlpha: _____________ 0x00001DB0
+DT_CSPlayer -> m_flFlashDuration: _____________ 0x00001DB4
+DT_CSPlayer -> m_iGlowIndex: __________________ 0x00001DCC
+DT_CSPlayer -> m_angEyeAngles: ________________ 0x000023B4
+DT_CSPlayer -> m_iAccount: ____________________ 0x000023A4
+DT_CSPlayer -> m_ArmorValue: __________________ 0x000023B0
+DT_CSPlayer -> m_bGunGameImmunity: ____________ 0x00001C14
+DT_CSPlayer -> m_iShotsFired: _________________ 0x00001D6C
+DT_BasePlayer -> m_lifeState: _________________ 0x0000025B
+DT_BasePlayer -> m_fFlags: ____________________ 0x00000100
+DT_BasePlayer -> m_iHealth: ___________________ 0x000000FC
+DT_BasePlayer -> m_hLastWeapon: _______________ 0x000016B8
+DT_BasePlayer -> m_hMyWeapons: ________________ 0x000011C0
+DT_BasePlayer -> m_hActiveWeapon: _____________ 0x000012C0
+DT_BasePlayer -> m_Local: _____________________ 0x00001378
+DT_BasePlayer -> m_vecViewOffset[0]: __________ 0x00000104
+DT_BasePlayer -> m_nTickBase: _________________ 0x000017CC
+DT_BasePlayer -> m_vecVelocity[0]: ____________ 0x00000110
+DT_BasePlayer -> m_szLastPlaceName: ___________ 0x00001950
+DT_Local -> m_vecPunch: _______________________ 0x000013E8
+DT_Local -> m_iCrossHairID: ___________________ 0x00002410
+BaseEntity -> m_dwModel: ______________________ 0x0000006C
+BaseEntity -> m_dwIndex: ______________________ 0x00000064
+BaseEntity -> m_dwBoneMatrix: _________________ 0x00000A78
+BaseEntity -> m_bMoveType: ____________________ 0x00000258
+BaseEntity -> m_bDormant: _____________________ 0x000000E9
+ClientState -> m_dwClientState: _______________ 0x005D0224
+ClientState -> m_dwLocalPlayerIndex: __________ 0x00000160
+ClientState -> m_dwInGame: ____________________ 0x000000E8
+ClientState -> m_dwMaxPlayer: _________________ 0x000002F0
+ClientState -> m_dwMapDirectory: ______________ 0x00000000
+ClientState -> m_dwMapname: ___________________ 0x0000026C
+ClientState -> m_dwPlayerInfo: ________________ 0x00005210
+ClientState -> m_dwViewAngles: ________________ 0x00004CE0
+EngineRender -> m_dwViewMatrix: _______________ 0x04A17AC4
+EngineRender -> m_dwEnginePosition: ___________ 0x0067BA24
+RadarBase -> m_dwRadarBase: ___________________ 0x04A571DC
+RadarBase -> m_dwRadarBasePointer: ____________ 0x00000050
+LocalPlayer -> m_dwLocalPlayer: _______________ 0x00A8013C
+EntityList -> m_dwEntityList: _________________ 0x04A22534
+WeaponTable -> m_dwWeaponTable: _______________ 0x04A695CC
+WeaponTable -> m_dwWeaponTableIndex: __________ 0x0000162C
+Extra -> m_dwInput: ___________________________ 0x04A6CE70
+Extra -> m_dwGlobalVars: ______________________ 0x004F02D0
+Extra -> m_dwGlowObject: ______________________ 0x04B357D4
+Extra -> m_dwForceJump: _______________________ 0x04AB3528
+Extra -> m_dwForceAttack: _____________________ 0x02E94458
